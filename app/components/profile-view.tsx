@@ -20,8 +20,8 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
             <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
               <BookOpen className="h-10 w-10 md:h-12 md:w-12 text-white" />
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">¡Crea tu perfil!</h2>
-            <p className="text-gray-600 mb-6 text-sm md:text-base max-w-md mx-auto">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">¡Crea tu perfil!</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm md:text-base max-w-md mx-auto">
               Personaliza tu experiencia en Liza-Agenda completando tu información personal
             </p>
             <Button onClick={onEditProfile} className="bg-gradient-to-r from-purple-600 to-pink-600">
@@ -55,11 +55,17 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
                 )}
               </div>
               <div className="text-center sm:text-left min-w-0 flex-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">{profile.name}</h1>
-                <p className="text-lg text-gray-600 mt-1 truncate">{profile.career}</p>
-                {profile.university && <p className="text-gray-500 truncate">{profile.university}</p>}
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                  {profile.name}
+                </h1>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1 truncate">{profile.career}</p>
+                {profile.university && (
+                  <p className="text-gray-500 dark:text-gray-500 truncate">{profile.university}</p>
+                )}
                 {profile.bio && (
-                  <p className="text-gray-700 mt-2 text-sm md:text-base line-clamp-3 sm:max-w-md">{profile.bio}</p>
+                  <p className="text-gray-700 dark:text-gray-300 mt-2 text-sm md:text-base line-clamp-3 sm:max-w-md">
+                    {profile.bio}
+                  </p>
                 )}
               </div>
             </div>
@@ -83,23 +89,25 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-3">
               <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="text-gray-700 text-sm md:text-base truncate">{profile.email || "No especificado"}</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm md:text-base truncate">
+                {profile.email || "No especificado"}
+              </span>
             </div>
             <div className="flex items-center space-x-3">
               <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="text-gray-700 text-sm md:text-base">
+              <span className="text-gray-700 dark:text-gray-300 text-sm md:text-base">
                 Semestre: {profile.semester || "No especificado"}
               </span>
             </div>
             <div className="flex items-center space-x-3">
               <Award className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="text-gray-700 text-sm md:text-base">
+              <span className="text-gray-700 dark:text-gray-300 text-sm md:text-base">
                 Horas de estudio semanales: {profile.studyHours}h
               </span>
             </div>
             <div className="flex items-center space-x-3">
               <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="text-gray-700 text-sm md:text-base">
+              <span className="text-gray-700 dark:text-gray-300 text-sm md:text-base">
                 Género: {profile.gender === "female" ? "Femenino" : profile.gender === "male" ? "Masculino" : "Otro"}
               </span>
             </div>
@@ -116,13 +124,16 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
           </CardHeader>
           <CardContent>
             {profile.goals.length === 0 ? (
-              <p className="text-gray-500 text-center py-4 text-sm">No has establecido metas aún</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">No has establecido metas aún</p>
             ) : (
               <div className="space-y-2">
                 {profile.goals.map((goal, index) => (
-                  <div key={index} className="flex items-start space-x-2 p-2 bg-green-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-start space-x-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                  >
                     <Target className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 text-sm md:text-base line-clamp-2">{goal}</span>
+                    <span className="text-gray-700 dark:text-gray-300 text-sm md:text-base line-clamp-2">{goal}</span>
                   </div>
                 ))}
               </div>
@@ -140,11 +151,17 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
           </CardHeader>
           <CardContent>
             {profile.favoriteSubjects.length === 0 ? (
-              <p className="text-gray-500 text-center py-4 text-sm">No has seleccionado materias favoritas</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">
+                No has seleccionado materias favoritas
+              </p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {profile.favoriteSubjects.map((subject, index) => (
-                  <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs"
+                  >
                     {subject}
                   </Badge>
                 ))}
@@ -163,19 +180,25 @@ export function ProfileView({ profile, onEditProfile }: ProfileViewProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm md:text-base">Horas totales esta semana</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Horas totales esta semana</span>
               <span className="font-bold text-yellow-600 text-sm md:text-base">{profile.studyHours}h</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm md:text-base">Promedio diario</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Promedio diario</span>
               <span className="font-bold text-yellow-600 text-sm md:text-base">
                 {Math.round((profile.studyHours / 7) * 10) / 10}h
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm md:text-base">Materias activas</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Materias activas</span>
               <span className="font-bold text-yellow-600 text-sm md:text-base">{profile.favoriteSubjects.length}</span>
             </div>
+            {profile.gpa && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">GPA Actual</span>
+                <span className="font-bold text-yellow-600 text-sm md:text-base">{profile.gpa.toFixed(2)}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

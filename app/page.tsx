@@ -5,7 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle2, Clock, Plus, BookOpen, Target, User, CalendarIcon, Menu } from "lucide-react"
+import {
+  CheckCircle2,
+  Clock,
+  Plus,
+  BookOpen,
+  Target,
+  User,
+  CalendarIcon,
+  Menu,
+  Moon,
+  Sun,
+  Bell,
+  Timer,
+  Calculator,
+  FileText,
+  Download,
+  Palette,
+} from "lucide-react"
 import { TaskForm } from "./components/task-form"
 import { TaskList } from "./components/task-list"
 import { CalendarView } from "./components/calendar-view"
@@ -14,7 +31,15 @@ import { ProfileView } from "./components/profile-view"
 import { ProfileForm } from "./components/profile-form"
 import { ScheduleView } from "./components/schedule-view"
 import { AchievementsBadges } from "./components/achievements-badges"
+import { NotesView } from "./components/notes-view"
+import { PomodoroTimer } from "./components/pomodoro-timer"
+import { GradeCalculator } from "./components/grade-calculator"
+import { ResourcesView } from "./components/resources-view"
+import { NotificationCenter } from "./components/notification-center"
+import { ThemeCustomizer } from "./components/theme-customizer"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useTheme } from "next-themes"
+import { useToast } from "@/hooks/use-toast"
 
 export interface Task {
   id: string
@@ -25,6 +50,9 @@ export interface Task {
   dueDate: Date
   completed: boolean
   category: "assignment" | "exam" | "project" | "reading" | "other"
+  tags: string[]
+  estimatedTime?: number
+  actualTime?: number
 }
 
 export interface UserProfile {
@@ -39,6 +67,10 @@ export interface UserProfile {
   studyHours: number
   favoriteSubjects: string[]
   gender: "female" | "male" | "other"
+  gpa?: number
+  targetGPA?: number
+  notifications: boolean
+  theme: string
 }
 
 export interface ScheduleItem {
@@ -51,6 +83,37 @@ export interface ScheduleItem {
   professor: string
 }
 
+export interface Note {
+  id: string
+  title: string
+  content: string
+  subject: string
+  createdAt: Date
+  updatedAt: Date
+  tags: string[]
+}
+
+export interface Resource {
+  id: string
+  title: string
+  type: "book" | "website" | "video" | "document" | "other"
+  url?: string
+  description: string
+  subject: string
+  rating: number
+  completed: boolean
+}
+
+export interface Grade {
+  id: string
+  subject: string
+  assignment: string
+  grade: number
+  maxGrade: number
+  weight: number
+  date: Date
+}
+
 const initialTasks: Task[] = [
   {
     id: "1",
@@ -61,6 +124,8 @@ const initialTasks: Task[] = [
     dueDate: new Date(2025, 0, 28),
     completed: false,
     category: "assignment",
+    tags: ["ensayo", "historia"],
+    estimatedTime: 180,
   },
   {
     id: "2",
@@ -71,6 +136,8 @@ const initialTasks: Task[] = [
     dueDate: new Date(2025, 0, 30),
     completed: false,
     category: "exam",
+    tags: ["examen", "álgebra"],
+    estimatedTime: 120,
   },
   {
     id: "3",
@@ -81,6 +148,8 @@ const initialTasks: Task[] = [
     dueDate: new Date(2025, 1, 5),
     completed: false,
     category: "project",
+    tags: ["proyecto", "experimento"],
+    estimatedTime: 300,
   },
   {
     id: "4",
@@ -91,6 +160,9 @@ const initialTasks: Task[] = [
     dueDate: new Date(2025, 0, 26),
     completed: true,
     category: "reading",
+    tags: ["lectura", "resumen"],
+    estimatedTime: 60,
+    actualTime: 45,
   },
 ]
 
@@ -106,6 +178,10 @@ const initialProfile: UserProfile = {
   studyHours: 0,
   favoriteSubjects: [],
   gender: "female",
+  gpa: 0,
+  targetGPA: 0,
+  notifications: true,
+  theme: "default",
 }
 
 const initialSchedule: ScheduleItem[] = [
@@ -146,11 +222,24 @@ const loadFromLocalStorage = (key: string, defaultValue: any) => {
       const item = localStorage.getItem(key)
       if (item) {
         const parsed = JSON.parse(item)
-        // Convert date strings back to Date objects for tasks
+        // Convert date strings back to Date objects
         if (key === "liza-agenda-tasks" && Array.isArray(parsed)) {
           return parsed.map((task: any) => ({
             ...task,
             dueDate: new Date(task.dueDate),
+          }))
+        }
+        if (key === "liza-agenda-notes" && Array.isArray(parsed)) {
+          return parsed.map((note: any) => ({
+            ...note,
+            createdAt: new Date(note.createdAt),
+            updatedAt: new Date(note.updatedAt),
+          }))
+        }
+        if (key === "liza-agenda-grades" && Array.isArray(parsed)) {
+          return parsed.map((grade: any) => ({
+            ...grade,
+            date: new Date(grade.date),
           }))
         }
         return parsed
@@ -166,20 +255,35 @@ export default function LizaAgenda() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [profile, setProfile] = useState<UserProfile>(initialProfile)
   const [schedule, setSchedule] = useState<ScheduleItem[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
+  const [resources, setResources] = useState<Resource[]>([])
+  const [grades, setGrades] = useState<Grade[]>([])
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [showProfileForm, setShowProfileForm] = useState(false)
-  const [activeView, setActiveView] = useState<"dashboard" | "tasks" | "calendar" | "profile" | "schedule">("dashboard")
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showThemeCustomizer, setShowThemeCustomizer] = useState(false)
+  const [activeView, setActiveView] = useState<
+    "dashboard" | "tasks" | "calendar" | "profile" | "schedule" | "notes" | "pomodoro" | "grades" | "resources"
+  >("dashboard")
   const [isLoaded, setIsLoaded] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const { toast } = useToast()
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedTasks = loadFromLocalStorage("liza-agenda-tasks", initialTasks)
     const savedProfile = loadFromLocalStorage("liza-agenda-profile", initialProfile)
     const savedSchedule = loadFromLocalStorage("liza-agenda-schedule", initialSchedule)
+    const savedNotes = loadFromLocalStorage("liza-agenda-notes", [])
+    const savedResources = loadFromLocalStorage("liza-agenda-resources", [])
+    const savedGrades = loadFromLocalStorage("liza-agenda-grades", [])
 
     setTasks(savedTasks)
     setProfile(savedProfile)
     setSchedule(savedSchedule)
+    setNotes(savedNotes)
+    setResources(savedResources)
+    setGrades(savedGrades)
     setIsLoaded(true)
   }, [])
 
@@ -202,6 +306,46 @@ export default function LizaAgenda() {
     }
   }, [schedule, isLoaded])
 
+  useEffect(() => {
+    if (isLoaded) {
+      saveToLocalStorage("liza-agenda-notes", notes)
+    }
+  }, [notes, isLoaded])
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToLocalStorage("liza-agenda-resources", resources)
+    }
+  }, [resources, isLoaded])
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToLocalStorage("liza-agenda-grades", grades)
+    }
+  }, [grades, isLoaded])
+
+  // Simple notification system
+  useEffect(() => {
+    if (!profile.notifications || !isLoaded) return
+
+    const checkDueTasks = () => {
+      const now = new Date()
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+      tasks.forEach((task) => {
+        if (!task.completed && task.dueDate <= tomorrow && task.dueDate > now) {
+          toast({
+            title: "Tarea próxima a vencer",
+            description: `${task.title} vence mañana`,
+          })
+        }
+      })
+    }
+
+    const interval = setInterval(checkDueTasks, 60000) // Check every minute
+    return () => clearInterval(interval)
+  }, [tasks, profile.notifications, isLoaded, toast])
+
   const addTask = (newTask: Omit<Task, "id">) => {
     const task: Task = {
       ...newTask,
@@ -209,19 +353,76 @@ export default function LizaAgenda() {
     }
     setTasks([...tasks, task])
     setShowTaskForm(false)
+    toast({
+      title: "Tarea creada",
+      description: `${task.title} ha sido agregada exitosamente`,
+    })
   }
 
   const toggleTask = (taskId: string) => {
-    setTasks(tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)))
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === taskId) {
+          const updatedTask = { ...task, completed: !task.completed }
+          if (updatedTask.completed) {
+            toast({
+              title: "¡Tarea completada!",
+              description: `Has completado: ${task.title}`,
+            })
+          }
+          return updatedTask
+        }
+        return task
+      }),
+    )
   }
 
   const deleteTask = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId)
     setTasks(tasks.filter((task) => task.id !== taskId))
+    if (task) {
+      toast({
+        title: "Tarea eliminada",
+        description: `${task.title} ha sido eliminada`,
+        variant: "destructive",
+      })
+    }
   }
 
   const updateProfile = (newProfile: UserProfile) => {
     setProfile(newProfile)
     setShowProfileForm(false)
+    toast({
+      title: "Perfil actualizado",
+      description: "Tu información ha sido guardada exitosamente",
+    })
+  }
+
+  const exportData = () => {
+    const data = {
+      tasks,
+      profile,
+      schedule,
+      notes,
+      resources,
+      grades,
+      exportDate: new Date().toISOString(),
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `liza-agenda-backup-${new Date().toISOString().split("T")[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Datos exportados",
+      description: "Tu información ha sido descargada exitosamente",
+    })
   }
 
   const upcomingTasks = tasks
@@ -238,6 +439,8 @@ export default function LizaAgenda() {
     return item.day.toLowerCase() === today.toLowerCase()
   })
 
+  const overdueTasks = tasks.filter((task) => !task.completed && task.dueDate < new Date()).length
+
   const NavigationItems = () => (
     <>
       {[
@@ -245,6 +448,10 @@ export default function LizaAgenda() {
         { key: "tasks", label: "Mis Tareas", icon: CheckCircle2 },
         { key: "calendar", label: "Calendario", icon: CalendarIcon },
         { key: "schedule", label: "Horario", icon: Clock },
+        { key: "notes", label: "Notas", icon: FileText },
+        { key: "pomodoro", label: "Pomodoro", icon: Timer },
+        { key: "grades", label: "Calificaciones", icon: Calculator },
+        { key: "resources", label: "Recursos", icon: BookOpen },
         { key: "profile", label: "Perfil", icon: User },
       ].map(({ key, label, icon: Icon }) => (
         <button
@@ -252,8 +459,8 @@ export default function LizaAgenda() {
           onClick={() => setActiveView(key as any)}
           className={`w-full py-3 px-4 border-b-2 md:border-b-2 md:py-4 md:px-1 font-medium text-sm flex items-center space-x-2 transition-colors ${
             activeView === key
-              ? "border-purple-500 text-purple-600 bg-purple-50 md:bg-transparent"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 md:hover:bg-transparent"
+              ? "border-purple-500 text-purple-600 bg-purple-50 md:bg-transparent dark:bg-purple-900/20"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 md:hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-300"
           }`}
         >
           <Icon className="h-4 w-4" />
@@ -265,21 +472,21 @@ export default function LizaAgenda() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
             <BookOpen className="h-8 w-8 text-white" />
           </div>
-          <p className="text-gray-600">Cargando Liza-Agenda...</p>
+          <p className="text-gray-600 dark:text-gray-400">Cargando Liza-Agenda...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center space-x-3">
@@ -290,7 +497,9 @@ export default function LizaAgenda() {
                 <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Liza-Agenda
                 </h1>
-                <p className="text-xs md:text-sm text-gray-600 hidden sm:block">Tu compañera de estudios inteligente</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">
+                  Tu compañera de estudios inteligente
+                </p>
               </div>
             </div>
 
@@ -308,9 +517,36 @@ export default function LizaAgenda() {
                       <span className="text-white text-sm font-medium">{profile.name.charAt(0).toUpperCase()}</span>
                     )}
                   </div>
-                  <span className="text-sm font-medium text-gray-700 hidden md:inline">¡Hola, {profile.name}!</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">
+                    ¡Hola, {profile.name}!
+                  </span>
                 </div>
               )}
+
+              {/* Notification Bell */}
+              <Button variant="ghost" size="sm" onClick={() => setShowNotifications(true)} className="relative">
+                <Bell className="h-4 w-4" />
+                {overdueTasks > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {overdueTasks}
+                  </span>
+                )}
+              </Button>
+
+              {/* Theme Toggle */}
+              <Button variant="ghost" size="sm" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+
+              {/* Theme Customizer */}
+              <Button variant="ghost" size="sm" onClick={() => setShowThemeCustomizer(true)}>
+                <Palette className="h-4 w-4" />
+              </Button>
+
+              {/* Export Data */}
+              <Button variant="ghost" size="sm" onClick={exportData}>
+                <Download className="h-4 w-4" />
+              </Button>
 
               <Button
                 onClick={() => setShowTaskForm(true)}
@@ -352,9 +588,9 @@ export default function LizaAgenda() {
       </header>
 
       {/* Desktop Navigation */}
-      <nav className="bg-white border-b hidden md:block">
+      <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8 overflow-x-auto">
             <NavigationItems />
           </div>
         </div>
@@ -397,6 +633,12 @@ export default function LizaAgenda() {
                     <div className="text-center sm:text-right flex-shrink-0">
                       <p className="text-sm text-purple-100">Horas de estudio esta semana</p>
                       <p className="text-2xl md:text-3xl font-bold">{profile.studyHours}h</p>
+                      {profile.gpa && (
+                        <div className="mt-2">
+                          <p className="text-sm text-purple-100">GPA Actual</p>
+                          <p className="text-lg font-bold">{profile.gpa.toFixed(2)}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -447,10 +689,10 @@ export default function LizaAgenda() {
                   </div>
                   {profile.goals.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mis Metas:</h4>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mis Metas:</h4>
                       <div className="space-y-1">
                         {profile.goals.slice(0, 3).map((goal, index) => (
-                          <div key={index} className="text-sm text-gray-600 flex items-center">
+                          <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
                             <Target className="h-3 w-3 mr-2 text-purple-500 flex-shrink-0" />
                             <span className="line-clamp-1">{goal}</span>
                           </div>
@@ -478,21 +720,24 @@ export default function LizaAgenda() {
                 </CardHeader>
                 <CardContent>
                   {todaySchedule.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400">
                       <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                       <p className="text-sm">No tienes clases programadas para hoy</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {todaySchedule.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                        >
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-gray-900 truncate">{item.subject}</h4>
-                            <p className="text-sm text-gray-600 truncate">{item.professor}</p>
-                            <p className="text-xs text-gray-500 truncate">{item.classroom}</p>
+                            <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate">{item.subject}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{item.professor}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{item.classroom}</p>
                           </div>
                           <div className="text-right flex-shrink-0 ml-2">
-                            <p className="text-sm font-medium text-blue-600">
+                            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                               {item.startTime} - {item.endTime}
                             </p>
                           </div>
@@ -518,7 +763,7 @@ export default function LizaAgenda() {
               <CardContent>
                 <div className="space-y-4">
                   {upcomingTasks.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
                       <p className="text-sm">¡Excelente! No tienes tareas pendientes.</p>
                     </div>
@@ -526,12 +771,12 @@ export default function LizaAgenda() {
                     upcomingTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg space-y-2 sm:space-y-0"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2 sm:space-y-0"
                       >
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{task.title}</h4>
-                          <p className="text-sm text-gray-600 truncate">{task.subject}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{task.subject}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                             Vence:{" "}
                             {task.dueDate.toLocaleDateString("es-ES", {
                               weekday: "short",
@@ -539,6 +784,15 @@ export default function LizaAgenda() {
                               month: "short",
                             })}
                           </p>
+                          {task.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {task.tags.slice(0, 3).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center space-x-2 flex-shrink-0">
                           <Badge
@@ -578,12 +832,22 @@ export default function LizaAgenda() {
         {activeView === "calendar" && <CalendarView tasks={tasks} />}
         {activeView === "profile" && <ProfileView profile={profile} onEditProfile={() => setShowProfileForm(true)} />}
         {activeView === "schedule" && <ScheduleView schedule={schedule} setSchedule={setSchedule} />}
+        {activeView === "notes" && <NotesView notes={notes} setNotes={setNotes} />}
+        {activeView === "pomodoro" && <PomodoroTimer />}
+        {activeView === "grades" && (
+          <GradeCalculator grades={grades} setGrades={setGrades} profile={profile} setProfile={setProfile} />
+        )}
+        {activeView === "resources" && <ResourcesView resources={resources} setResources={setResources} />}
       </main>
 
       {/* Modals */}
       {showTaskForm && <TaskForm onSubmit={addTask} onClose={() => setShowTaskForm(false)} />}
       {showProfileForm && (
         <ProfileForm profile={profile} onSubmit={updateProfile} onClose={() => setShowProfileForm(false)} />
+      )}
+      {showNotifications && <NotificationCenter tasks={tasks} onClose={() => setShowNotifications(false)} />}
+      {showThemeCustomizer && (
+        <ThemeCustomizer profile={profile} setProfile={setProfile} onClose={() => setShowThemeCustomizer(false)} />
       )}
     </div>
   )

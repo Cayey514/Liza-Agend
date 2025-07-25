@@ -28,7 +28,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: Math.min(completedTasks, 1),
       maxProgress: 1,
       color: "text-green-600",
-      bgColor: "bg-green-50",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
     },
     {
       id: "task-master",
@@ -39,7 +39,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: Math.min(completedTasks, 10),
       maxProgress: 10,
       color: "text-yellow-600",
-      bgColor: "bg-yellow-50",
+      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
     },
     {
       id: "organized",
@@ -50,7 +50,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: hasProfile ? 1 : 0,
       maxProgress: 1,
       color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
     },
     {
       id: "goal-setter",
@@ -61,7 +61,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: hasGoals ? 1 : 0,
       maxProgress: 1,
       color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
       id: "productive",
@@ -72,7 +72,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: Math.min(completedTasks, 5),
       maxProgress: 5,
       color: "text-orange-600",
-      bgColor: "bg-orange-50",
+      bgColor: "bg-orange-50 dark:bg-orange-900/20",
     },
     {
       id: "scholar",
@@ -83,7 +83,7 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
       progress: hasSchedule ? 1 : 0,
       maxProgress: 1,
       color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
+      bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
     },
   ]
 
@@ -113,8 +113,12 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
                       <achievement.icon className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm md:text-base truncate">{achievement.title}</h4>
-                      <p className="text-xs md:text-sm text-gray-600 line-clamp-2">{achievement.description}</p>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm md:text-base truncate">
+                        {achievement.title}
+                      </h4>
+                      <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {achievement.description}
+                      </p>
                       <Badge variant="secondary" className="mt-2 text-xs">
                         ¡Completado!
                       </Badge>
@@ -139,18 +143,25 @@ export function AchievementsBadges({ tasks, profile }: AchievementsBadgesProps) 
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {nextAchievements.map((achievement) => (
-                <div key={achievement.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div
+                  key={achievement.id}
+                  className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="text-gray-400 flex-shrink-0">
                       <achievement.icon className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-gray-700 text-sm md:text-base truncate">{achievement.title}</h4>
-                      <p className="text-xs md:text-sm text-gray-500 line-clamp-2">{achievement.description}</p>
+                      <h4 className="font-semibold text-gray-700 dark:text-gray-300 text-sm md:text-base truncate">
+                        {achievement.title}
+                      </h4>
+                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {achievement.description}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-gray-600">
+                    <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                       <span>Progreso</span>
                       <span>
                         {achievement.progress}/{achievement.maxProgress}

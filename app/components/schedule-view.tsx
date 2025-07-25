@@ -90,8 +90,8 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mi Horario de Clases</h2>
-          <p className="text-gray-600">Organiza tu semana académica</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mi Horario de Clases</h2>
+          <p className="text-gray-600 dark:text-gray-400">Organiza tu semana académica</p>
         </div>
         <Button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-purple-600 to-pink-600">
           <Plus className="h-4 w-4 mr-2" />
@@ -104,7 +104,7 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
         {days.map((day) => (
           <Card key={day} className="min-h-[300px]">
             <CardHeader className="pb-3">
-              <CardTitle className="text-center text-sm font-medium text-gray-700">{day}</CardTitle>
+              <CardTitle className="text-center text-sm font-medium text-gray-700 dark:text-gray-300">{day}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {scheduleByDay[day].length === 0 ? (
@@ -116,10 +116,10 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
                 scheduleByDay[day].map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 group hover:shadow-md transition-shadow"
+                    className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800 group hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900 text-sm">{item.subject}</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{item.subject}</h4>
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button size="sm" variant="ghost" onClick={() => handleEdit(item)} className="h-6 w-6 p-0">
                           <Edit className="h-3 w-3" />
@@ -135,18 +135,18 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center text-xs text-gray-600">
+                      <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                         <Clock className="h-3 w-3 mr-1" />
                         {item.startTime} - {item.endTime}
                       </div>
                       {item.classroom && (
-                        <div className="flex items-center text-xs text-gray-600">
+                        <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                           <MapPin className="h-3 w-3 mr-1" />
                           {item.classroom}
                         </div>
                       )}
                       {item.professor && (
-                        <div className="flex items-center text-xs text-gray-600">
+                        <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                           <User className="h-3 w-3 mr-1" />
                           {item.professor}
                         </div>
@@ -172,7 +172,7 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
 
             if (todayClasses.length === 0) {
               return (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <Clock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                   <p>No tienes clases programadas para hoy</p>
                 </div>
@@ -182,21 +182,24 @@ export function ScheduleView({ schedule, setSchedule }: ScheduleViewProps) {
             return (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {todayClasses.map((item) => (
-                  <div key={item.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-medium text-gray-900">{item.subject}</h4>
+                  <div
+                    key={item.id}
+                    className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                  >
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">{item.subject}</h4>
                     <div className="mt-2 space-y-1">
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <Clock className="h-4 w-4 mr-2" />
                         {item.startTime} - {item.endTime}
                       </div>
                       {item.classroom && (
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                           <MapPin className="h-4 w-4 mr-2" />
                           {item.classroom}
                         </div>
                       )}
                       {item.professor && (
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                           <User className="h-4 w-4 mr-2" />
                           {item.professor}
                         </div>

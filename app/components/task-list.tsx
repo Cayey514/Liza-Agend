@@ -25,7 +25,8 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.subject.toLowerCase().includes(searchTerm.toLowerCase())
+      task.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesPriority = filterPriority === "all" || task.priority === filterPriority
     const matchesStatus =
       filterStatus === "all" ||
@@ -133,7 +134,7 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
           sortedTasks.map((task) => (
             <Card
               key={task.id}
-              className={`${task.completed ? "opacity-75" : ""} ${isOverdue(task) ? "border-red-200 bg-red-50" : ""}`}
+              className={`${task.completed ? "opacity-75" : ""} ${isOverdue(task) ? "border-red-200 bg-red-50 dark:bg-red-900/10" : ""}`}
             >
               <CardContent className="p-6">
                 <div className="flex items-start space-x-4">
@@ -143,12 +144,19 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3
-                          className={`font-medium ${task.completed ? "line-through text-gray-500" : "text-gray-900"}`}
+                          className={`font-medium ${task.completed ? "line-through text-gray-500" : "text-gray-900 dark:text-gray-100"}`}
                         >
                           {task.title}
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1">{task.subject}</p>
-                        {task.description && <p className="text-sm text-gray-500 mt-2">{task.description}</p>}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.subject}</p>
+                        {task.description && (
+                          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">{task.description}</p>
+                        )}
+                        {task.estimatedTime && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            Tiempo estimado: {task.estimatedTime} minutos
+                          </p>
+                        )}
                       </div>
 
                       <Button
@@ -162,7 +170,7 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
                     </div>
 
                     <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap gap-2">
                         <Badge
                           variant={
                             task.priority === "high"
@@ -188,9 +196,17 @@ export function TaskList({ tasks, onToggleTask, onDeleteTask }: TaskListProps) {
                         </Badge>
 
                         {isOverdue(task) && <Badge variant="destructive">Vencida</Badge>}
+
+                        {task.tags.map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
 
-                      <p className={`text-sm ${isOverdue(task) ? "text-red-600 font-medium" : "text-gray-500"}`}>
+                      <p
+                        className={`text-sm ${isOverdue(task) ? "text-red-600 font-medium" : "text-gray-500 dark:text-gray-400"}`}
+                      >
                         {task.dueDate.toLocaleDateString("es-ES", {
                           weekday: "short",
                           month: "short",

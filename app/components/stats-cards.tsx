@@ -20,28 +20,28 @@ export function StatsCards({ tasks }: StatsCardsProps) {
       value: completedTasks,
       icon: CheckCircle2,
       color: "text-green-600",
-      bgColor: "bg-green-50",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
     },
     {
       title: "Tareas Pendientes",
       value: pendingTasks,
       icon: Clock,
       color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
       title: "Tareas Vencidas",
       value: overdueTasks,
       icon: AlertTriangle,
       color: "text-red-600",
-      bgColor: "bg-red-50",
+      bgColor: "bg-red-50 dark:bg-red-900/20",
     },
     {
       title: "Materias Activas",
       value: totalSubjects,
       icon: BookOpen,
       color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
     },
   ]
 
@@ -52,8 +52,8 @@ export function StatsCards({ tasks }: StatsCardsProps) {
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">{stat.title}</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stat.value}</p>
               </div>
               <div className={`${stat.bgColor} p-2 md:p-3 rounded-full flex-shrink-0`}>
                 <stat.icon className={`h-4 w-4 md:h-5 md:w-5 ${stat.color}`} />
